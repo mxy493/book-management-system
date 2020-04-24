@@ -132,30 +132,28 @@ void Library::ImportData()
 void Library::BookListAdd(Book_List * newBook)
 {
 	Book_List *cur = b_first;
-	if (b_first == NULL)
-	{
+	if (b_first == NULL) {
 		b_first = newBook;
 	}
-	else
-	{
+	else {
 		//判断是否存在该图书信息
 		while (cur != NULL)
 		{
-			if (newBook->b_info.book_number == cur->b_info.book_number)
-			{
+			if (newBook->b_info.book_number == cur->b_info.book_number) {
 				cur->b_info.book_exist += newBook->b_info.book_exist;
 				cur->b_info.book_inventory += newBook->b_info.book_inventory;
 				break;
 			}
-			else
-				if (cur->b_next == NULL)
-				{
+			else {
+				if (cur->b_next == NULL) {
 					newBook->b_next = cur->b_next;
 					cur->b_next = newBook;
 					break;
 				}
-				else
+				else {
 					cur = cur->b_next;
+				}
+			}
 		}
 	}
 }
@@ -193,46 +191,87 @@ void Library::BookListShow()
 	}
 }
 
+//B树查找
 void Library::BookFind()
 {
+	int sel;
+	cout << "0.链表查找" << endl;
+	cout << "1.B树查找" << endl;
+	cout << "选择查找方式：";
+	cin >> sel;
+
 	cout << endl << "==============================" << endl;
-	Book_List *cur = b_first;
 	string info;
-	int n = 0;
 	cout << endl << "请输入图书的相关信息(书号、书名、作者):";
 	cin >> info;
-	bool isExist = false;
-	while (cur != NULL)
-	{
-		if (cur->b_info.book_number.find(info) != -1 || cur->b_info.book_name.find(info) != -1 || cur->b_info.book_author.find(info) != -1)
-		{
-			isExist = true;
-			if (n == 0)
-			{
-				cout << endl << setw(72) << setfill('-') << "-" << setfill(' ') << endl;
-				cout << endl << setw(6) << "序号" <<
-					setw(10) << "书号" <<
-					setw(20) << "书名" <<
-					setw(16) << "作者" <<
-					setw(10) << "现存量" <<
-					setw(10) << "总库存量" << endl;
-			}
-			cout << setw(6) << n + 1 <<
-				setw(10) << cur->b_info.book_number <<
-				setw(20) << cur->b_info.book_name <<
-				setw(16) << cur->b_info.book_author <<
-				setw(10) << cur->b_info.book_exist <<
-				setw(10) << cur->b_info.book_inventory << endl;
-			n++;
-		}
-		cur = cur->b_next;
+	int seq = 0;//序号
+	vector<Book_Info*> books;//保存查找结果
+	//链表查找
+	if (sel == 0) {
+		ListFind(books, info);
 	}
-	if (isExist == true)
+	//B树查找
+	else if (sel == 1) {
+		BTreeEmpty();					//置空B树
+		BTreeEstablish();				//构建B树
+		backtrackFind(btree_root, books, info);
+	}
+	//打印查找结果
+	for (int i = 0; i < books.size(); i++) {
+		if (i == 0) {
+			cout << endl << setw(72) << setfill('-') << "-" << setfill(' ') << endl;
+			cout << endl << setw(6) << "序号" <<
+				setw(10) << "书号" <<
+				setw(20) << "书名" <<
+				setw(16) << "作者" <<
+				setw(10) << "现存量" <<
+				setw(10) << "总库存量" << endl;
+		}
+		cout << setw(6) << i + 1 <<
+			setw(10) << books[i]->book_number <<
+			setw(20) << books[i]->book_name <<
+			setw(16) << books[i]->book_author <<
+			setw(10) << books[i]->book_exist <<
+			setw(10) << books[i]->book_inventory << endl;
+	}
+
+	if (!books.empty())
 		cout << endl << setw(72) << setfill('-') << "-" << setfill(' ') << endl;
-	else
-	{
+	else {
 		cout << endl << "<!>没有找到相关图书！" << endl;
 		cout << endl << "==============================" << endl;
+	}
+}
+
+//B树递归查找
+void Library::backtrackFind(BTreeNode* cur, vector<Book_Info*>& books, string info) {
+	if (cur == NULL) return;
+	for (int i = 0; i <= cur->num; i++) {
+		//递归查找
+		backtrackFind(cur->ptr[i], books, info);
+		if (i == 0) continue;//key[0]无意义
+		if (cur->key[i]->book_number.find(info) != -1 ||
+			cur->key[i]->book_name.find(info) != -1 ||
+			cur->key[i]->book_author.find(info) != -1)
+		{
+			books.push_back(cur->key[i]);
+		}
+	}
+}
+
+//链表查找
+void Library::ListFind(vector<Book_Info*>& books, string info)
+{
+	Book_List* cur = b_first;
+	while (cur != NULL)
+	{
+		if (cur->b_info.book_number.find(info) != -1 || 
+			cur->b_info.book_name.find(info) != -1 || 
+			cur->b_info.book_author.find(info) != -1)
+		{
+			books.push_back(&cur->b_info);
+		}
+		cur = cur->b_next;
 	}
 }
 
@@ -819,7 +858,9 @@ void Library::SaveData()
 
 void Library::BTreeEmpty()
 {
+	BTreeNode* tmp = btree_root;
 	btree_root = NULL;
+	delete tmp;
 }
 
 bool Library::BookIsExistInBTree(BTreeNode * loc, Book_Info & book)
@@ -932,7 +973,7 @@ Label:cin >> fun;
 	else if (fun == 2)
 	{
 		BTreeEmpty();					//置空B树
-		BTreeEstablish();					//构建B树
+		BTreeEstablish();				//构建B树
 		BookBTreeShow(btree_root, 0);	//输出B树
 	}
 	else

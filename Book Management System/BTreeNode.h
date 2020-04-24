@@ -1,7 +1,4 @@
 #pragma once
-
-
-
 const int m = 4;
 
 struct BTreeNode
