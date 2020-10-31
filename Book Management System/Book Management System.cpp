@@ -32,7 +32,8 @@ int main()
 		switch (func)
 		{
 		case 1:
-			library.ImportData();
+			library.ImportBookData();
+			library.ImportReaderData();
 			break;
 		case 2:
 			library.BookAdd(); 

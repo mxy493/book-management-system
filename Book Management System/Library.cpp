@@ -5,128 +5,122 @@
 
 using namespace std;
 
-void Library::ImportData()
+void Library::ImportBookData()
 {
 	cout << endl << endl << "==============================" << endl << endl;
 	ifstream infile1("book data.dat", ios::in);
 
+	Book_List* b_cur = nullptr;
 	if (!infile1)
 	{
 		cerr << "<!>图书信息导入失败！" << endl;
-		goto L1;
 	}
-
-	while (!infile1.eof())
+	else
 	{
-		string b_number;				//书号
-		string b_name;					//书名
-		string b_author;				//作者
-		int b_exist;					//现存量
-		int b_inventory;				//库存量
-		infile1 >> b_number >> b_name >> b_author >> b_exist >> b_inventory;
-
-		Book_List *newBook = new Book_List(b_number, b_name, b_author, b_exist, b_inventory);
-		
-		if (b_first == NULL)
-			b_first = newBook;
-		else
+		while (!infile1.eof())
 		{
-			Book_List *b_cur = b_first;
-			while (b_cur != NULL)
+			string b_number;				//书号
+			string b_name;					//书名
+			string b_author;				//作者
+			int b_exist;					//现存量
+			int b_inventory;				//库存量
+			infile1 >> b_number >> b_name >> b_author >> b_exist >> b_inventory;
+
+			// 删除节点时需要释放内存
+			Book_List* newBook = new Book_List(b_number, b_name, b_author, b_exist, b_inventory);
+
+			if (b_first == nullptr)
 			{
-				if (b_cur->b_next == NULL)
-				{
-					b_cur->b_next = newBook;
-					break;
-				}
-				else
-					b_cur = b_cur->b_next;
+				b_first = newBook;
+				b_cur = b_first;
+			}
+			else
+			{
+				b_cur->b_next = newBook;
+				b_cur = b_cur->b_next;
 			}
 		}
+		infile1.close();
+		cout << "<!>图书信息导入成功！" << endl;
 	}
-	infile1.close();
-	cout << "<!>图书信息导入成功！" << endl;
+	cout << endl << "==============================" << endl;
+}
 
-
-	L1:ifstream infile2("reader data.dat", ios::in);
+void Library::ImportReaderData()
+{
+	cout << endl << endl << "==============================" << endl << endl;
+	ifstream infile2("reader data.dat", ios::in);
 
 	if (!infile2)
 	{
 		cerr << "<!>读者信息导入失败！" << endl;
-		return;
 	}
-
-	while (!infile2.eof())
+	else
 	{
-		string r_ID;				//学号
-		string r_name;				//姓名
-
-		infile2 >> r_ID >> r_name;
-
-		Reader_List *newReader = new Reader_List(r_ID, r_name);
+		Reader_List* r_cur = nullptr;
+		while (!infile2.eof())
 		{
-			string r_b_file = "reader books ";
-			string r_b_file_type = ".dat";
-			r_b_file = r_b_file + r_ID + r_b_file_type;
-			ifstream infile3(r_b_file, ios::in);
+			string r_ID;				//学号
+			string r_name;				//姓名
 
-			if (!infile3)
-			{
-				cerr << "<!>读者" << r_b_file << "的图书借阅信息导入失败！" << endl;
-				goto L2;
-			}
-			while (!infile3.eof())
-			{
-				string r_b_number;				//书号
-				string r_b_name;				//书名
-				string r_b_author;				//作者
-				int r_b_borrow;					//借阅量
-				infile3 >> r_b_number >> r_b_name >> r_b_author >> r_b_borrow;
+			infile2 >> r_ID >> r_name;
 
-				Reader_Books *newBorBook = new Reader_Books(r_b_number, r_b_name, r_b_author, r_b_borrow);
-				if (newReader->r_info.borbook == NULL)
-				{
-					newReader->r_info.borbook = newBorBook;
-					continue;
-				}
-				else
-				{
-					Reader_Books *r_b_cur = newReader->r_info.borbook;
-					while (r_b_cur != NULL)
-					{
-						if (r_b_cur->next == NULL)
-						{
-							r_b_cur->next = newBorBook;
-							break;
-						}
-						else
-							r_b_cur = r_b_cur->next;
-					}
-				}
-				infile3.close();
-				cout << "<!>读者" << r_ID << "图书借阅信息导入成功！" << endl;
-			}
-		}
-		L2:if (r_first == NULL)
-			r_first = newReader;
-		else
-		{
-			Reader_List *r_cur = r_first;
-			while (r_cur != NULL)
+			Reader_List* newReader = new Reader_List(r_ID, r_name);
+
+			ImportBorrowData(newReader, r_ID);  // 导入该读者的借阅数据
+
+			if (r_first == NULL)
 			{
-				if (r_cur->r_next == NULL)
-				{
-					r_cur->r_next = newReader;
-					break;
-				}
-				else
-					r_cur = r_cur->r_next;
+				r_first = newReader;
+				r_cur = r_first;
+			}
+			else
+			{
+				r_cur->r_next = newReader;
+				r_cur = r_cur->r_next;
 			}
 		}
 	}
 	infile2.close();
 	cout << "<!>读者信息导入成功！" << endl;
 	cout << endl << "==============================" << endl;
+}
+
+void Library::ImportBorrowData(Reader_List* const new_reader, const string& reader_id)
+{
+	// 导入该读者借阅信息
+	string r_b_file = "reader books ";
+	string r_b_file_type = ".dat";
+	r_b_file = r_b_file + reader_id + r_b_file_type;
+	ifstream infile3(r_b_file, ios::in);
+
+	Reader_Books* r_b_cur = nullptr;  // 指向借阅的图书的末尾节点
+	if (!infile3)
+	{
+		cerr << "<!>读者" << r_b_file << "的图书借阅信息导入失败！" << endl;
+	}
+	while (!infile3.eof())
+	{
+		string r_b_number;				//书号
+		string r_b_name;				//书名
+		string r_b_author;				//作者
+		int r_b_borrow;					//借阅量
+		infile3 >> r_b_number >> r_b_name >> r_b_author >> r_b_borrow;
+
+		Reader_Books* newBorBook = new Reader_Books(r_b_number, r_b_name, r_b_author, r_b_borrow);
+		if (new_reader->r_info.borbook == NULL)
+		{
+			new_reader->r_info.borbook = newBorBook;
+			r_b_cur = new_reader->r_info.borbook;
+		}
+		else
+		{
+			r_b_cur->next = newBorBook;
+			r_b_cur = r_b_cur->next;
+		}
+	}
+	infile3.close();
+	cout << "<!>读者" << reader_id << "图书借阅信息导入成功！" << endl;
 }
 
 void Library::BookListAdd(Book_List * newBook)
@@ -157,8 +151,6 @@ void Library::BookListAdd(Book_List * newBook)
 		}
 	}
 }
-
-
 
 void Library::BookListShow()
 {
