@@ -22,8 +22,8 @@ public:
 	void ImportBorrowData(Reader_List* const new_reader, const string& reader_id);	// 1.3 导入读者借阅数据
 
 	void BookAdd();													// 2 采编入库
-	void BookListAdd(Book_List * newBook);							// 2.1 添加到图书链表
-	void BTreeInsert(Book_List * book, BTreeNode * loc);			// 2.2 插入图书到B树中
+	void BookListAdd(shared_ptr<Book_List> newBook);							// 2.1 添加到图书链表
+	void BTreeInsert(shared_ptr<Book_List> book, BTreeNode * loc);			// 2.2 插入图书到B树中
 
 	void BookShow();												// 3 所有图书
 	void BookListShow();											// 3.1 链表显示
@@ -55,7 +55,7 @@ public:
 	void BTreeEstablish();											// 根据链表图书信息构建B树
 	BTreeNode * InsertEleDirect(BTreeNode * node, BTreeNode * book);// 直接在给定结点中插入元素（不分裂）
 private:
-	Book_List *b_first;
+	shared_ptr<Book_List> b_first;
 	Reader_List *r_first;
 	BTreeNode *btree_root = NULL;
 };

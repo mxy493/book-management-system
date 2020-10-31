@@ -5,7 +5,7 @@
 struct Book_List
 {
 	Book_Info b_info;
-	Book_List *b_next = NULL;
+	shared_ptr<Book_List> b_next = nullptr;
 
 	Book_List() {}
 	Book_List(string number, string name, string author, int quantity) 
