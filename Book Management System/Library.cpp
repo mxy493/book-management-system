@@ -647,37 +647,38 @@ void Library::BookBorrow()
 void Library::BookReturn()
 {
 	cout << endl << "==============================" << endl << endl;
-	if (r_first == NULL)
+	if (r_first == nullptr)
 		cout << "当前没有已注册学生信息！" << endl;
 	else
 	{
 		string ID;
 		cout << "请输入您的学号:";
 		cin >> ID;
-		shared_ptr<Reader_List> r_cur = r_first;
+		auto r_cur = r_first;  // 当前读者
 		bool isExist = false;
-		while (r_cur != NULL)
+		while (r_cur != nullptr)
 		{
 			if (r_cur->r_info.reader_ID == ID)
 			{
 				isExist = true;
 				cout.setf(ios::left | ios::unitbuf);
 				cout << "学号:" << setw(10) << r_cur->r_info.reader_ID << "姓名:" << setw(10) << r_cur->r_info.reader_name << endl;
-				if (r_cur->r_info.borbook == NULL)
+				if (r_cur->r_info.borbook == nullptr)
 				{
 					cout << "<!>您当前没有借阅任何图书！" << endl;
 					break;
 				}
 				else
 				{
+					// 打印该读者当前借阅的所有图书
 					cout.setf(ios::left | ios::unitbuf);
 					cout << endl << setw(58) << setfill('-') << "-" << setfill(' ') << endl;
 					cout << setw(6) << "序号" << setw(10) << "书号" << setw(20) <<
 						"书名" << setw(16) << "作者" << setw(6) << "数量" << endl << endl;
-					Reader_Books *r_b_cur = r_cur->r_info.borbook;
+					Reader_Books *r_b_cur = r_cur->r_info.borbook;  // 当前的该读者借阅的图书
 					int n = 1;
 					vector<string> nums;
-					while (r_b_cur != NULL)
+					while (r_b_cur != nullptr)
 					{
 						cout << setw(6) << n << setw(10) << r_b_cur->borbook_number << setw(20) << r_b_cur->borbook_name <<
 							setw(16) << r_b_cur->borbook_author << setw(6) << r_b_cur->borbook_quantity << endl;
@@ -687,65 +688,75 @@ void Library::BookReturn()
 					}
 					cout << setw(58) << setfill('-') << "-" << setfill(' ') << endl << endl;
 
-					int num;
+					// 选择要归还的图书并归还
+					int index;
 					cout << "请选择您要归还的图书:";
-					L1:cin >> num;
-					if (num<1 || num>n - 1)
+					while (cin >> index)
 					{
+						if (index >= 1 && index < n) break;
 						cout << "输入有误，请重新输入:";
-						goto L1;
 					}
+					int quantity;
+					cout << "请输入要归还的数量:";
+					while (cin >> quantity)
+					{
+						if (quantity >= 0 && quantity <= r_b_cur->borbook_quantity) break;
+						cout << "输入有误，请重新输入:";
+					}
+					// 要归还的是头结点的图书
+					if (r_cur->r_info.borbook->borbook_number == nums[index - 1])
+					{
+						if (quantity == r_b_cur->borbook_quantity)			//清空该读者借阅图书中的这本图书
+						{
+							Reader_Books* tmp = r_cur->r_info.borbook;
+							r_cur->r_info.borbook = r_cur->r_info.borbook->next;  // 移动头指针
+							delete tmp;  // 释放内存
+						}
+						else r_cur->r_info.borbook->borbook_quantity -= quantity;  // 减去归还图书的数量
+					}
+					// 要归还的不是头结点的图书，需要找到前一个结点
 					else
 					{
-						Reader_Books *r_b_cur2 = r_cur->r_info.borbook;
-						while (r_b_cur2 != NULL)
+						r_b_cur = r_cur->r_info.borbook;  // 修改指针指向借阅的第一本图书
+						while (r_b_cur->next != nullptr)
 						{
-							if (r_b_cur2->borbook_number == nums[num - 1])
+							if (r_b_cur->next->borbook_number == nums[index - 1])
 								break;
-							r_b_cur2 = r_b_cur2->next;
+							r_b_cur = r_b_cur->next;
 						}
-						int qua;
-						cout << "请输入要归还的数量:";
-						L2:cin >> qua;
-						if (qua<0 || qua>r_b_cur2->borbook_quantity)
+						if (quantity == r_b_cur->next->borbook_quantity)  // 清空该读者借阅图书中的这本图书
 						{
-							cout << "输入有误，请重新输入:";
-							goto L2;
+							Reader_Books* tmp = r_b_cur->next;
+							r_b_cur->next = r_b_cur->next->next;  // 修改指针指向
+							delete tmp;  // 释放内存
 						}
-						else
+						else r_b_cur->next->borbook_quantity -= quantity;  // 减去归还图书的数量
+					}
+
+					// 增加归还的图书数量
+					auto b_cur = b_first;
+					bool exist = false;
+					while (b_cur != nullptr)
+					{
+						if (b_cur->b_info.book_number == nums[index - 1])
 						{
-							if (qua == r_b_cur2->borbook_quantity)			//清空该读者借阅图书中的这本图书
-								r_cur->r_info.borbook = NULL;
-							else
-								r_b_cur2->borbook_quantity -= qua;			//减去归还图书的数量
-							shared_ptr<Book_List> b_cur = b_first;
-							bool isExist = false;
-							while (b_cur != NULL)
-							{
-								if (b_cur->b_info.book_number == nums[num - 1])
-								{
-									isExist = true;
-									b_cur->b_info.book_exist += qua;
-									cout << endl << "<!>图书已成功归还！" << endl;
-									break;
-								}
-								b_cur = b_cur->b_next;
-							}
-							if (isExist == false)
-							{
-								cout << endl << "<!>图书归还失败！图书馆内没有这本书的信息！" << endl;
-							}
+							exist = true;
+							b_cur->b_info.book_exist += quantity;
+							cout << endl << "<!>图书已成功归还！" << endl;
+							break;
 						}
+						b_cur = b_cur->b_next;
+					}
+					if (!exist)
+					{
+						cout << endl << "<!>图书归还失败！图书馆内没有这本书的信息！" << endl;
 					}
 				}
 				break;
 			}
 			r_cur = r_cur->r_next;
 		}
-		if (isExist == false)
-		{
-			cout << "系统中不存在您的相关信息！" << endl;
-		}
+		if (!isExist) cout << "系统中不存在您的相关信息！" << endl;
 	}
 	cout << endl << "==============================" << endl;
 }
