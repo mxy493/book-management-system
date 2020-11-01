@@ -248,7 +248,7 @@ void Library::backtrackFind(BTreeNode* cur, vector<Book_Info*>& books, string in
 	}
 }
 
-//链表查找
+// 链表查找
 void Library::ListFind(vector<Book_Info*>& books, string info)
 {
 	auto cur = b_first;
@@ -765,7 +765,7 @@ void Library::SaveData()
 {
 	cout << endl << "==============================" << endl << endl;
 	ofstream outfile1("book data.dat", ios::out);
-	shared_ptr<Book_List> b_cur = b_first;
+	auto b_cur = b_first;
 
 	if (!outfile1)
 	{
@@ -773,78 +773,59 @@ void Library::SaveData()
 		exit(1);
 	}
 
-	while (b_cur != NULL)
+	while (b_cur != nullptr)
 	{
-		outfile1.setf(ios::right | ios::unitbuf);						//右对齐，每次输出后刷新所有流
+		outfile1.setf(ios::right | ios::unitbuf);  // 右对齐，每次输出后刷新所有流
 		outfile1 << setw(6) << b_cur->b_info.book_number <<
 			setw(30) << b_cur->b_info.book_name <<
 			setw(16) << b_cur->b_info.book_author <<
 			setw(10) << b_cur->b_info.book_exist <<
 			setw(10) << b_cur->b_info.book_inventory;
-		if (b_cur->b_next == NULL)
-			break;
-		else
-		{
-			outfile1 << endl;
-			b_cur = b_cur->b_next;
-		}
+		if (b_cur->b_next != nullptr) outfile1 << endl;
+		b_cur = b_cur->b_next;
 	}
 	outfile1.close();
 	cout << "<!>图书信息保存成功！" << endl;
 
 	ofstream outfile2("reader data.dat", ios::out);
-	shared_ptr<Reader_List> r_cur = r_first;
-
 	if (!outfile2)
 	{
 		cerr << "<!>读者信息保存失败！" << endl;
 		exit(1);
 	}
-	while (r_cur != NULL)
+	auto r_cur = r_first;
+	while (r_cur != nullptr)
 	{
-		outfile2.setf(ios::right | ios::unitbuf);						//右对齐，每次输出后刷新所有流
+		outfile2.setf(ios::right | ios::unitbuf);  // 右对齐，每次输出后刷新所有流
 		outfile2 << setw(10) << r_cur->r_info.reader_ID << setw(20) << r_cur->r_info.reader_name;
-		if (r_cur->r_info.borbook != NULL)
+		if (r_cur->r_info.borbook != nullptr)
 		{
 			string r_b_file = "reader books ";
 			string r_b_file_type = ".dat";
 			r_b_file = r_b_file + r_cur->r_info.reader_ID + r_b_file_type;
 			
-			Reader_Books *r_b_cur = r_cur->r_info.borbook;
-			
 			ofstream outfile3(r_b_file, ios::out);
-
 			if (!outfile3)
 			{
 				cerr << "<!>读者借阅信息保存失败！" << endl;
 				exit(1);
 			}
-
-			while (r_b_cur != NULL)
+			Reader_Books *r_b_cur = r_cur->r_info.borbook;
+			while (r_b_cur != nullptr)
 			{
-				outfile3.setf(ios::right | ios::unitbuf);						//右对齐，每次输出后刷新所有流
+				outfile3.setf(ios::right | ios::unitbuf);  // 右对齐，每次输出后刷新所有流
 				outfile3 << setw(6) << r_b_cur->borbook_number <<
 					setw(30) << r_b_cur->borbook_name <<
 					setw(10) << r_b_cur->borbook_author <<
 					setw(4) << r_b_cur->borbook_quantity;
-				if (r_b_cur->next == NULL)
-					break;
-				else
-				{
-					outfile3 << endl;
-					r_b_cur = r_b_cur->next;
-				}
+				if (r_b_cur->next != nullptr) outfile3 << endl;
+				r_b_cur = r_b_cur->next;
 			}
 			outfile3.close();
 			cout << "<!>读者" << r_cur->r_info.reader_ID << "的借阅信息保存成功！" << endl;
 		}
-		if (r_cur->r_next == NULL)
-			break;
-		else
-		{
-			outfile2 << endl;
-			r_cur = r_cur->r_next;
-		}
+		if (r_cur->r_next != nullptr) outfile2 << endl;
+		r_cur = r_cur->r_next;
 	}
 	outfile2.close();
 	cout << "<!>读者信息保存成功！" << endl;
