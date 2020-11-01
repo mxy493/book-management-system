@@ -5,7 +5,7 @@
 struct Reader_List
 {
 	Reader_Info r_info;
-	Reader_List *r_next = NULL;
+	shared_ptr<Reader_List> r_next = nullptr;
 
 	Reader_List() {}
 	Reader_List(string ID, string name)

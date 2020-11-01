@@ -57,7 +57,7 @@ void Library::ImportReaderData()
 	}
 	else
 	{
-		Reader_List* r_cur = nullptr;
+		shared_ptr<Reader_List> r_cur = nullptr;
 		while (!infile2.eof())
 		{
 			string r_ID;				//学号
@@ -65,11 +65,11 @@ void Library::ImportReaderData()
 
 			infile2 >> r_ID >> r_name;
 
-			Reader_List* newReader = new Reader_List(r_ID, r_name);
+			shared_ptr<Reader_List> newReader = make_shared<Reader_List>(r_ID, r_name);
 
 			ImportBorrowData(newReader, r_ID);  // 导入该读者的借阅数据
 
-			if (r_first == NULL)
+			if (r_first == nullptr)
 			{
 				r_first = newReader;
 				r_cur = r_first;
@@ -86,7 +86,7 @@ void Library::ImportReaderData()
 	cout << endl << "==============================" << endl;
 }
 
-void Library::ImportBorrowData(Reader_List* const new_reader, const string& reader_id)
+void Library::ImportBorrowData(shared_ptr<Reader_List> new_reader, const string& reader_id)
 {
 	// 导入该读者借阅信息
 	string r_b_file = "reader books ";
@@ -424,20 +424,18 @@ void Library::ReaderBooks()
 
 void Library::ReaderList()
 {
-	Reader_List *r_cur = r_first;
-	cout.setf(ios::left | ios::unitbuf);						//左对齐，每次输出后刷新所有流
-	if (r_first == NULL)
+	cout.setf(ios::left | ios::unitbuf);  // 左对齐，每次输出后刷新所有流
+	if (r_first == nullptr)
 	{
 		cout << "<!>当前无已注册读者信息！" << endl;
 		cout << endl << "==============================" << endl;
 		return;
 	}
 	else {
-		if (r_cur == r_first)
-		{
-			cout << endl << setw(20) << setfill('-') << "-" << setfill(' ') << endl;
-			cout << setw(10) << "学号" << setw(10) << "姓名" << endl << endl;
-		}
+		cout << endl << setw(20) << setfill('-') << "-" << setfill(' ') << endl;
+		cout << setw(10) << "学号" << setw(10) << "姓名" << endl << endl;
+
+		shared_ptr<Reader_List> r_cur = r_first;
 		while (r_cur != NULL)
 		{
 			cout << setw(10) << r_cur->r_info.reader_ID << setw(10) << r_cur->r_info.reader_name << endl;
@@ -449,7 +447,7 @@ void Library::ReaderList()
 
 void Library::ReaderBorrowed()
 {
-	if (r_first == NULL)
+	if (r_first == nullptr)
 	{
 		cout << "当前无已注册读者信息！" << endl;
 	}
@@ -458,7 +456,7 @@ void Library::ReaderBorrowed()
 		string ID;
 		cout << endl << "请输入您的学号:";
 		cin >> ID;
-		Reader_List *r_cur = r_first;
+		shared_ptr<Reader_List> r_cur = r_first;
 		bool isExist = false;
 		while (r_cur != NULL)
 		{
@@ -469,7 +467,9 @@ void Library::ReaderBorrowed()
 				cout.setf(ios::left | ios::unitbuf);
 				cout << "学号:" << setw(10) << r_cur->r_info.reader_ID << "姓名:" << setw(1) << r_cur->r_info.reader_name << endl;
 				if (r_cur->r_info.borbook == NULL)
+				{
 					cout << endl << "<!>您当前没有借阅任何图书！" << endl;
+				}
 				else
 				{
 					cout.setf(ios::left | ios::unitbuf);
@@ -507,7 +507,7 @@ void Library::BookBorrow()
 	cout << "请输入图书的相关信息(书号、书名、作者):";
 	cin >> info;
 	bool isExist = false;
-	while (b_cur != NULL)
+	while (b_cur != nullptr)
 	{
 		if (b_cur->b_info.book_number.find(info) != -1 || b_cur->b_info.book_name.find(info) != -1 || b_cur->b_info.book_author.find(info) != -1)
 		{
@@ -546,13 +546,12 @@ void Library::BookBorrow()
 		b_cur = b_first;
 		int num;
 		cout << "请输入要借阅的图书所对应的序号:";
-	L1:cin >> num;
-		if (num > n)
+		while (cin >> num)
 		{
+			if (num > n) break;
 			cout << "输入有误，请重新输入:";
-			goto L1;
 		}
-		while (b_cur != NULL)
+		while (b_cur != nullptr)
 		{
 			if (b_cur->b_info.book_number == nums[num - 1])
 			{
@@ -564,17 +563,16 @@ void Library::BookBorrow()
 				cout << "总库存:" << b_cur->b_info.book_inventory << endl;
 				int qua = 0;
 				cout << endl << "请输入您要借阅的数量:";
-			L2:cin >> qua;
+				while (cin >> qua)
+				{
+					if (qua < b_cur->b_info.book_exist) break;
+					cout << "馆存数量不足，如您还需借阅，请重新输入:";
+				}
 				if (qua <= 0)
 					break;
-				else if (qua > b_cur->b_info.book_exist)
-				{
-					cout << "馆存数量不足，如您还需借阅，请重新输入:";
-					goto L2;
-				}
 				else
 				{
-					Reader_List *r_cur = r_first;			//指向当前读者
+					auto r_cur = r_first;			//指向当前读者
 					string ID;
 					string name;
 					cout << "请输入您的学号:";
@@ -582,67 +580,62 @@ void Library::BookBorrow()
 					cout << "请输入您的姓名:";
 					cin >> name;
 
-					Reader_List *newReader = new Reader_List(ID, name);
+					auto newReader = make_shared<Reader_List>(ID, name);
 					Reader_Books *newBorBook = new Reader_Books(b_cur->b_info.book_number, b_cur->b_info.book_name, b_cur->b_info.book_author, qua);
 
-					if (r_first == NULL)					//读者信息库为空，则直接添加该读者以及借阅的图书
+					if (r_first == nullptr)  // 读者信息库为空，则直接添加该读者以及借阅的图书
 					{
 						r_first = newReader;
 						r_first->r_info.borbook = newBorBook;
-						b_cur->b_info.book_exist -= qua;
+						b_cur->b_info.book_exist -= qua;  // 减去借阅的数量
 					}
 					else									//否则，判断是否存在该读者信息
 					{
-						while (r_cur != NULL)
+						bool exist = false;   // 已存在该读者信息
+						while (r_cur != nullptr)
 						{
-							if (ID == r_cur->r_info.reader_ID)			//说明已存在该读者信息
+							if (r_cur->r_info.reader_ID == ID)  // 说明已存在该读者信息
 							{
-								if (r_cur->r_info.borbook == NULL)		//借阅的图书头指针为空
+								exist = true;
+								if (r_cur->r_info.borbook == nullptr)
 								{
-									r_cur->r_info.borbook = newBorBook;
+									r_cur->r_info.borbook = newBorBook;  // 没有借阅过图书
 									break;
 								}
 								else {
 									Reader_Books *borbook_cur = r_cur->r_info.borbook;		//指向当前读者的当前图书
-									while (borbook_cur != NULL)
+									bool borrowed = false;
+									while (borbook_cur != nullptr)
 									{
 										if (b_cur->b_info.book_number == borbook_cur->borbook_number)
 										{
+											borrowed = true;
 											b_cur->b_info.book_exist -= qua;				//图书馆该书现存量减qua
 											borbook_cur->borbook_number += qua;				//该读者借阅的该图书量加qua
 											break;
 										}
-										else
-										{
-											if (borbook_cur->next == NULL)					//该读者没有借阅过这本书
-											{
-												newBorBook->next = borbook_cur->next;		//借阅的图书的链表尾新建图书信息
-												borbook_cur->next = newBorBook;
-												b_cur->b_info.book_exist -= qua;
-												break;
-											}
-											else
-												borbook_cur = borbook_cur->next;
-										}
+										borbook_cur = borbook_cur->next;
+									}
+									if (!borrowed)  // 该读者没有借阅过这本书
+									{
+										borbook_cur->next = newBorBook;
+										b_cur->b_info.book_exist -= qua;  // 减去借出数量
 									}
 								}
 								break;
 							}
-							else
-								if (r_cur->r_next == NULL)							//不存在该读者的相关信息
-								{
-									newReader->r_next = r_cur->r_next;				//链表尾新建读者信息
-									r_cur->r_next = newReader;
-									r_cur->r_next->r_info.borbook = newBorBook;		//新建读者借阅的图书信息	
-									b_cur->b_info.book_exist -= qua;
-									break;
-								}
-								else
-									r_cur = r_cur->r_next;
+							r_cur = r_cur->r_next;
+						}
+						if (!exist)  // 不存在该读者的相关信息
+						{
+							r_cur->r_next = newReader;
+							r_cur->r_next->r_info.borbook = newBorBook;		//新建读者借阅的图书信息	
+							b_cur->b_info.book_exist -= qua;
+							break;
 						}
 					}
 				}
-				break;			//已经在图书库存中找到了这本书，执行相应操作后则跳出循环
+				break;  // 已经在图书库存中找到了这本书，执行相应操作后则跳出循环
 			}
 			b_cur = b_cur->b_next;
 		}
@@ -661,7 +654,7 @@ void Library::BookReturn()
 		string ID;
 		cout << "请输入您的学号:";
 		cin >> ID;
-		Reader_List *r_cur = r_first;
+		shared_ptr<Reader_List> r_cur = r_first;
 		bool isExist = false;
 		while (r_cur != NULL)
 		{
@@ -789,7 +782,7 @@ void Library::SaveData()
 	cout << "<!>图书信息保存成功！" << endl;
 
 	ofstream outfile2("reader data.dat", ios::out);
-	Reader_List *r_cur = r_first;
+	shared_ptr<Reader_List> r_cur = r_first;
 
 	if (!outfile2)
 	{
@@ -867,7 +860,7 @@ bool Library::BookIsExistInBTree(BTreeNode * loc, Book_Info & book)
 	return false;
 }
 
-//定位元素，如果B树为空则返回NULL，否则返回最后的结点位置
+//定位元素，如果B树为空则返回nullptr，否则返回最后的结点位置
 BTreeNode * Library::BTreeLocate(Book_Info & book)
 {
 	BTreeNode *btree_cur = btree_root;
