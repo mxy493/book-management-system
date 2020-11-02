@@ -2,15 +2,15 @@
 
 #include "Reader_Info.h"
 
-struct Reader_List
+struct ReaderList
 {
-	Reader_Info r_info;
-	shared_ptr<Reader_List> r_next = nullptr;
+	ReaderInfo reader_info;
+	shared_ptr<ReaderList> reader_next = nullptr;
 
-	Reader_List() {}
-	Reader_List(string ID, string name)
+	ReaderList() {}
+	ReaderList(string id, string name)
 	{
-		r_info.reader_ID = ID;
-		r_info.reader_name = name;
+		reader_info.reader_id = id;
+		reader_info.reader_name = name;
 	}
 };

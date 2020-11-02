@@ -18,25 +18,25 @@
     <ClInclude Include="pch.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Book_Info.h">
+    <ClInclude Include="reader_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Book_List.h">
+    <ClInclude Include="reader_list.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Reader_Info.h">
+    <ClInclude Include="library.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Library.h">
+    <ClInclude Include="reader_books.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Reader_List.h">
+    <ClInclude Include="b_tree_node.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Reader_Books.h">
+    <ClInclude Include="book_list.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="BTreeNode.h">
+    <ClInclude Include="book_info.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -44,10 +44,10 @@
     <ClCompile Include="pch.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Book Management System.cpp">
+    <ClCompile Include="library.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Library.cpp">
+    <ClCompile Include="book_management_system.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

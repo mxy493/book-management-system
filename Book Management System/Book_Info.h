@@ -4,7 +4,7 @@
 
 using namespace std;
 
-struct Book_Info
+struct BookInfo
 {
 	string book_number;			//书号
 	string book_name;			//书名
@@ -12,7 +12,7 @@ struct Book_Info
 	int book_exist;				//现存量
 	int book_inventory;			//总库存
 
-	Book_Info()
+	BookInfo()
 	{
 		book_number = -1;
 		book_name = "";
@@ -21,7 +21,7 @@ struct Book_Info
 		book_inventory = -1;
 	}
 
-	Book_Info(Book_Info * book)
+	BookInfo(BookInfo * book)
 	{
 		book_number = book->book_number;
 		book_name = book->book_name;

@@ -5,10 +5,10 @@
 
 using namespace std;
 
-struct Reader_Info
+struct ReaderInfo
 {
-	string reader_ID;						//学号
+	string reader_id;						//学号
 	string reader_name;						//姓名
-	Reader_Books *borbook = NULL;			//借阅的图书的头指针
+	BorrowedBooks *borrowed_head = nullptr;	//借阅的图书的头指针
 };
 
