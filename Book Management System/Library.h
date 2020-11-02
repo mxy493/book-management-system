@@ -19,7 +19,7 @@ public:
 	//主功能函数
 	void ImportBookData();											// 1.1 导入图书数据
 	void ImportReaderData();										// 1.2 导入读者数据
-	void ImportBorrowData(shared_ptr<ReaderList> new_reader, const string& reader_id);	// 1.3 导入读者借阅数据
+	void ImportBorrowData(shared_ptr<ReaderList> new_reader, const string& id);	// 1.3 导入读者借阅数据
 
 	void BookAdd();													// 2 采编入库
 	void BookListAdd(shared_ptr<BookList> newBook);					// 2.1 添加到图书链表

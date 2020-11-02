@@ -36,8 +36,8 @@ void Library::ImportBookData()
 			}
 			else
 			{
-				b_cur->book_next = newBook;
-				b_cur = b_cur->book_next;
+				b_cur->next = newBook;
+				b_cur = b_cur->next;
 			}
 		}
 		infile1.close();
@@ -76,8 +76,8 @@ void Library::ImportReaderData()
 			}
 			else
 			{
-				r_cur->reader_next = newReader;
-				r_cur = r_cur->reader_next;
+				r_cur->next = newReader;
+				r_cur = r_cur->next;
 			}
 		}
 	}
@@ -86,12 +86,12 @@ void Library::ImportReaderData()
 	cout << endl << "==============================" << endl;
 }
 
-void Library::ImportBorrowData(shared_ptr<ReaderList> new_reader, const string& reader_id)
+void Library::ImportBorrowData(shared_ptr<ReaderList> new_reader, const string& id)
 {
 	// 导入该读者借阅信息
 	string r_b_file = "reader books ";
 	string r_b_file_type = ".dat";
-	r_b_file = r_b_file + reader_id + r_b_file_type;
+	r_b_file = r_b_file + id + r_b_file_type;
 	ifstream infile3(r_b_file, ios::in);
 
 	BorrowedBooks* r_b_cur = nullptr;  // 指向借阅的图书的末尾节点
@@ -120,7 +120,7 @@ void Library::ImportBorrowData(shared_ptr<ReaderList> new_reader, const string& 
 		}
 	}
 	infile3.close();
-	cout << "<!>读者" << reader_id << "图书借阅信息导入成功！" << endl;
+	cout << "<!>读者" << id << "图书借阅信息导入成功！" << endl;
 }
 
 void Library::BookListAdd(shared_ptr<BookList> newBook)
@@ -133,19 +133,19 @@ void Library::BookListAdd(shared_ptr<BookList> newBook)
 		//判断是否存在该图书信息
 		while (cur != NULL)
 		{
-			if (newBook->book_info.book_number == cur->book_info.book_number)
+			if (newBook->book_info.id == cur->book_info.id)
 			{
-				cur->book_info.book_exist += newBook->book_info.book_exist;
-				cur->book_info.book_inventory += newBook->book_info.book_inventory;
+				cur->book_info.exist += newBook->book_info.exist;
+				cur->book_info.inventory += newBook->book_info.inventory;
 				break;
 			}
 			else {
-				if (cur->book_next == NULL) {
-					cur->book_next = newBook;
+				if (cur->next == NULL) {
+					cur->next = newBook;
 					break;
 				}
 			}
-			cur = cur->book_next;
+			cur = cur->next;
 		}
 	}
 }
@@ -170,12 +170,12 @@ void Library::BookListShow()
 			setw(8) << "总库存量" << endl << endl;
 		while (cur != nullptr)
 		{
-			cout << setw(6) << cur->book_info.book_number <<
-				setw(30) << cur->book_info.book_name <<
-				setw(16) << cur->book_info.book_author <<
-				setw(10) << cur->book_info.book_exist <<
-				setw(8) << cur->book_info.book_inventory << endl;
-			cur = cur->book_next;
+			cout << setw(6) << cur->book_info.id <<
+				setw(30) << cur->book_info.name <<
+				setw(16) << cur->book_info.author <<
+				setw(10) << cur->book_info.exist <<
+				setw(8) << cur->book_info.inventory << endl;
+			cur = cur->next;
 		}
 		cout << setw(70) << setfill('-') << "-" << setfill(' ') << endl;
 	}
@@ -218,11 +218,11 @@ void Library::BookFind()
 			setw(10) << "总库存量" << endl;
 		for (int i = 0; i < books.size(); i++) {
 			cout << setw(6) << i + 1 <<
-				setw(10) << books[i]->book_number <<
-				setw(20) << books[i]->book_name <<
-				setw(16) << books[i]->book_author <<
-				setw(10) << books[i]->book_exist <<
-				setw(10) << books[i]->book_inventory << endl;
+				setw(10) << books[i]->id <<
+				setw(20) << books[i]->name <<
+				setw(16) << books[i]->author <<
+				setw(10) << books[i]->exist <<
+				setw(10) << books[i]->inventory << endl;
 		}
 		cout << endl << setw(72) << setfill('-') << "-" << setfill(' ') << endl;
 	}
@@ -239,9 +239,9 @@ void Library::backtrackFind(BTreeNode* cur, vector<BookInfo*>& books, string inf
 		//递归查找
 		backtrackFind(cur->ptr[i], books, info);
 		if (i == 0) continue;//key[0]无意义
-		if (cur->key[i]->book_number.find(info) != -1 ||
-			cur->key[i]->book_name.find(info) != -1 ||
-			cur->key[i]->book_author.find(info) != -1)
+		if (cur->key[i]->id.find(info) != -1 ||
+			cur->key[i]->name.find(info) != -1 ||
+			cur->key[i]->author.find(info) != -1)
 		{
 			books.push_back(cur->key[i]);
 		}
@@ -254,13 +254,13 @@ void Library::ListFind(vector<BookInfo*>& books, string info)
 	auto cur = book_head_;
 	while (cur != NULL)
 	{
-		if (cur->book_info.book_number.find(info) != -1 || 
-			cur->book_info.book_name.find(info) != -1 || 
-			cur->book_info.book_author.find(info) != -1)
+		if (cur->book_info.id.find(info) != -1 || 
+			cur->book_info.name.find(info) != -1 || 
+			cur->book_info.author.find(info) != -1)
 		{
 			books.push_back(&cur->book_info);  // 保存图书在内存中的地址
 		}
-		cur = cur->book_next;
+		cur = cur->next;
 	}
 }
 
@@ -301,7 +301,7 @@ void Library::BookRemove()
 	cin >> info;
 	while (cur != NULL)
 	{
-		if (cur->book_info.book_number.find(info) != -1 || cur->book_info.book_name.find(info) != -1 || cur->book_info.book_author.find(info) != -1)
+		if (cur->book_info.id.find(info) != -1 || cur->book_info.name.find(info) != -1 || cur->book_info.author.find(info) != -1)
 		{
 			if (n == 0)
 			{
@@ -313,15 +313,15 @@ void Library::BookRemove()
 					setw(10) << "现存量" <<
 					setw(8) << "总库存量" << endl << endl;
 			}
-			nums.push_back(cur->book_info.book_number);
+			nums.push_back(cur->book_info.id);
 			cout << setw(6) << ++n <<
-				setw(6) << cur->book_info.book_number <<
-				setw(30) << cur->book_info.book_name <<
-				setw(16) << cur->book_info.book_author <<
-				setw(10) << cur->book_info.book_exist <<
-				setw(8) << cur->book_info.book_inventory << endl;
+				setw(6) << cur->book_info.id <<
+				setw(30) << cur->book_info.name <<
+				setw(16) << cur->book_info.author <<
+				setw(10) << cur->book_info.exist <<
+				setw(8) << cur->book_info.inventory << endl;
 		}
-		cur = cur->book_next;
+		cur = cur->next;
 	}
 	if (n > 0)
 		cout << setw(76) << setfill('-') << "-" << setfill(' ') << endl;
@@ -340,40 +340,40 @@ void Library::BookRemove()
 		else break;
 	}
 	// 首节点特殊处理
-	if (book_head_->book_info.book_number == nums[num - 1])
+	if (book_head_->book_info.id == nums[num - 1])
 	{
-		if (book_head_->book_info.book_exist != book_head_->book_info.book_inventory)
+		if (book_head_->book_info.exist != book_head_->book_info.inventory)
 		{
 			cout << endl << "<!>清除库存失败！当前还有借出的图书暂未归还！" << endl;
 		}
 		else
 		{
 			// 智能自动释放内存，无需delete
-			book_head_ = book_head_->book_next;
+			book_head_ = book_head_->next;
 			cout << endl << "<!>库存已清除！" << endl;
 		}
 	}
 	// 其它节点
 	else
 	{
-		while (cur->book_next != NULL)
+		while (cur->next != NULL)
 		{
-			if (cur->book_next->book_info.book_number == nums[num - 1])
+			if (cur->next->book_info.id == nums[num - 1])
 			{
-				if (cur->book_next->book_info.book_exist != cur->book_next->book_info.book_inventory)
+				if (cur->next->book_info.exist != cur->next->book_info.inventory)
 				{
 					cout << endl << "<!>清除库存失败！当前还有借出的图书暂未归还！" << endl;
 					break;
 				}
 				else
 				{
-					cur->book_next = cur->book_next->book_next;
+					cur->next = cur->next->next;
 					// 智能自动释放内存，无需delete
 					cout << endl << "<!>库存已清除！" << endl;
 					break;
 				}
 			}
-			cur = cur->book_next;
+			cur = cur->next;
 		}
 	}
 }
@@ -383,7 +383,7 @@ void Library::BookListEmpty()
 	while (book_head_ != nullptr)
 	{
 		// 智能指针自动释放内存
-		book_head_ = book_head_->book_next;
+		book_head_ = book_head_->next;
 	}
 }
 
@@ -438,8 +438,8 @@ void Library::ShowReaderList()
 		shared_ptr<ReaderList> r_cur = reader_head_;
 		while (r_cur != NULL)
 		{
-			cout << setw(10) << r_cur->reader_info.reader_id << setw(10) << r_cur->reader_info.reader_name << endl;
-			r_cur = r_cur->reader_next;
+			cout << setw(10) << r_cur->reader_info.id << setw(10) << r_cur->reader_info.name << endl;
+			r_cur = r_cur->next;
 		}
 		cout << setw(20) << setfill('-') << "-" << setfill(' ') << endl;
 	}
@@ -460,12 +460,12 @@ void Library::ReaderBorrowed()
 		bool isExist = false;
 		while (r_cur != NULL)
 		{
-			if (r_cur->reader_info.reader_id == ID)
+			if (r_cur->reader_info.id == ID)
 			{
 				isExist = true;
 				cout << endl << "您的图书借阅信息如下:" << endl << endl;
 				cout.setf(ios::left | ios::unitbuf);
-				cout << "学号:" << setw(10) << r_cur->reader_info.reader_id << "姓名:" << setw(1) << r_cur->reader_info.reader_name << endl;
+				cout << "学号:" << setw(10) << r_cur->reader_info.id << "姓名:" << setw(1) << r_cur->reader_info.name << endl;
 				if (r_cur->reader_info.borrowed_head == NULL)
 				{
 					cout << endl << "<!>您当前没有借阅任何图书！" << endl;
@@ -480,15 +480,15 @@ void Library::ReaderBorrowed()
 					int i = 1;
 					while (r_b_cur != NULL)
 					{
-						cout << setw(6) << i << setw(10) << r_b_cur->borbook_number << setw(20) << r_b_cur->borbook_name <<
-							setw(16) << r_b_cur->borbook_author << setw(6) << r_b_cur->borbook_quantity << endl;
+						cout << setw(6) << i << setw(10) << r_b_cur->id << setw(20) << r_b_cur->name <<
+							setw(16) << r_b_cur->author << setw(6) << r_b_cur->quantity << endl;
 						i++;
 						r_b_cur = r_b_cur->next;
 					}
 					cout << setw(58) << setfill('-') << "-" << setfill(' ') << endl;
 				}
 			}
-			r_cur = r_cur->reader_next;
+			r_cur = r_cur->next;
 		}
 		if (isExist == false)
 		{
@@ -509,7 +509,7 @@ void Library::BookBorrow()
 	bool isExist = false;
 	while (b_cur != nullptr)
 	{
-		if (b_cur->book_info.book_number.find(info) != -1 || b_cur->book_info.book_name.find(info) != -1 || b_cur->book_info.book_author.find(info) != -1)
+		if (b_cur->book_info.id.find(info) != -1 || b_cur->book_info.name.find(info) != -1 || b_cur->book_info.author.find(info) != -1)
 		{
 			isExist = true;
 			if (n == 0)
@@ -523,16 +523,16 @@ void Library::BookBorrow()
 					setw(10) << "现存量" <<
 					setw(10) << "总库存量" << endl;
 			}
-			nums.push_back(b_cur->book_info.book_number);
+			nums.push_back(b_cur->book_info.id);
 			cout << setw(6) << n + 1 <<
-				setw(10) << b_cur->book_info.book_number <<
-				setw(20) << b_cur->book_info.book_name <<
-				setw(16) << b_cur->book_info.book_author <<
-				setw(10) << b_cur->book_info.book_exist <<
-				setw(10) << b_cur->book_info.book_inventory << endl;
+				setw(10) << b_cur->book_info.id <<
+				setw(20) << b_cur->book_info.name <<
+				setw(16) << b_cur->book_info.author <<
+				setw(10) << b_cur->book_info.exist <<
+				setw(10) << b_cur->book_info.inventory << endl;
 			n++;
 		}
-		b_cur = b_cur->book_next;
+		b_cur = b_cur->next;
 	}
 	if (isExist == false)
 	{
@@ -553,19 +553,19 @@ void Library::BookBorrow()
 		}
 		while (b_cur != nullptr)
 		{
-			if (b_cur->book_info.book_number == nums[num - 1])
+			if (b_cur->book_info.id == nums[num - 1])
 			{
 				cout << "你要借阅的图书信息如下:" << endl << endl;
-				cout << "书号:" << b_cur->book_info.book_number << endl;
-				cout << "书名:" << b_cur->book_info.book_name << endl;
-				cout << "作者:" << b_cur->book_info.book_name << endl;
-				cout << "现存数:" << b_cur->book_info.book_exist << endl;
-				cout << "总库存:" << b_cur->book_info.book_inventory << endl;
+				cout << "书号:" << b_cur->book_info.id << endl;
+				cout << "书名:" << b_cur->book_info.name << endl;
+				cout << "作者:" << b_cur->book_info.name << endl;
+				cout << "现存数:" << b_cur->book_info.exist << endl;
+				cout << "总库存:" << b_cur->book_info.inventory << endl;
 				int qua = 0;
 				cout << endl << "请输入您要借阅的数量:";
 				while (cin >> qua)
 				{
-					if (qua < b_cur->book_info.book_exist) break;
+					if (qua < b_cur->book_info.exist) break;
 					cout << "馆存数量不足，如您还需借阅，请重新输入:";
 				}
 				if (qua <= 0)
@@ -581,20 +581,20 @@ void Library::BookBorrow()
 					cin >> name;
 
 					auto newReader = make_shared<ReaderList>(ID, name);
-					BorrowedBooks *newBorBook = new BorrowedBooks(b_cur->book_info.book_number, b_cur->book_info.book_name, b_cur->book_info.book_author, qua);
+					BorrowedBooks *newBorBook = new BorrowedBooks(b_cur->book_info.id, b_cur->book_info.name, b_cur->book_info.author, qua);
 
 					if (reader_head_ == nullptr)  // 读者信息库为空，则直接添加该读者以及借阅的图书
 					{
 						reader_head_ = newReader;
 						reader_head_->reader_info.borrowed_head = newBorBook;
-						b_cur->book_info.book_exist -= qua;  // 减去借阅的数量
+						b_cur->book_info.exist -= qua;  // 减去借阅的数量
 					}
 					else									//否则，判断是否存在该读者信息
 					{
 						bool exist = false;   // 已存在该读者信息
 						while (r_cur != nullptr)
 						{
-							if (r_cur->reader_info.reader_id == ID)  // 说明已存在该读者信息
+							if (r_cur->reader_info.id == ID)  // 说明已存在该读者信息
 							{
 								exist = true;
 								if (r_cur->reader_info.borrowed_head == nullptr)
@@ -607,11 +607,11 @@ void Library::BookBorrow()
 									bool borrowed = false;
 									while (borbook_cur != nullptr)
 									{
-										if (b_cur->book_info.book_number == borbook_cur->borbook_number)
+										if (b_cur->book_info.id == borbook_cur->id)
 										{
 											borrowed = true;
-											b_cur->book_info.book_exist -= qua;				//图书馆该书现存量减qua
-											borbook_cur->borbook_number += qua;				//该读者借阅的该图书量加qua
+											b_cur->book_info.exist -= qua;				//图书馆该书现存量减qua
+											borbook_cur->id += qua;				//该读者借阅的该图书量加qua
 											break;
 										}
 										borbook_cur = borbook_cur->next;
@@ -619,25 +619,25 @@ void Library::BookBorrow()
 									if (!borrowed)  // 该读者没有借阅过这本书
 									{
 										borbook_cur->next = newBorBook;
-										b_cur->book_info.book_exist -= qua;  // 减去借出数量
+										b_cur->book_info.exist -= qua;  // 减去借出数量
 									}
 								}
 								break;
 							}
-							r_cur = r_cur->reader_next;
+							r_cur = r_cur->next;
 						}
 						if (!exist)  // 不存在该读者的相关信息
 						{
-							r_cur->reader_next = newReader;
-							r_cur->reader_next->reader_info.borrowed_head = newBorBook;		//新建读者借阅的图书信息	
-							b_cur->book_info.book_exist -= qua;
+							r_cur->next = newReader;
+							r_cur->next->reader_info.borrowed_head = newBorBook;		//新建读者借阅的图书信息	
+							b_cur->book_info.exist -= qua;
 							break;
 						}
 					}
 				}
 				break;  // 已经在图书库存中找到了这本书，执行相应操作后则跳出循环
 			}
-			b_cur = b_cur->book_next;
+			b_cur = b_cur->next;
 		}
 	}
 	cout << endl << "<!>图书借阅成功！" << endl;
@@ -658,11 +658,11 @@ void Library::BookReturn()
 		bool isExist = false;
 		while (r_cur != nullptr)
 		{
-			if (r_cur->reader_info.reader_id == ID)
+			if (r_cur->reader_info.id == ID)
 			{
 				isExist = true;
 				cout.setf(ios::left | ios::unitbuf);
-				cout << "学号:" << setw(10) << r_cur->reader_info.reader_id << "姓名:" << setw(10) << r_cur->reader_info.reader_name << endl;
+				cout << "学号:" << setw(10) << r_cur->reader_info.id << "姓名:" << setw(10) << r_cur->reader_info.name << endl;
 				if (r_cur->reader_info.borrowed_head == nullptr)
 				{
 					cout << "<!>您当前没有借阅任何图书！" << endl;
@@ -680,9 +680,9 @@ void Library::BookReturn()
 					vector<string> nums;
 					while (r_b_cur != nullptr)
 					{
-						cout << setw(6) << n << setw(10) << r_b_cur->borbook_number << setw(20) << r_b_cur->borbook_name <<
-							setw(16) << r_b_cur->borbook_author << setw(6) << r_b_cur->borbook_quantity << endl;
-						nums.push_back(r_b_cur->borbook_number);
+						cout << setw(6) << n << setw(10) << r_b_cur->id << setw(20) << r_b_cur->name <<
+							setw(16) << r_b_cur->author << setw(6) << r_b_cur->quantity << endl;
+						nums.push_back(r_b_cur->id);
 						n++;
 						r_b_cur = r_b_cur->next;
 					}
@@ -700,19 +700,19 @@ void Library::BookReturn()
 					cout << "请输入要归还的数量:";
 					while (cin >> quantity)
 					{
-						if (quantity >= 0 && quantity <= r_b_cur->borbook_quantity) break;
+						if (quantity >= 0 && quantity <= r_b_cur->quantity) break;
 						cout << "输入有误，请重新输入:";
 					}
 					// 要归还的是头结点的图书
-					if (r_cur->reader_info.borrowed_head->borbook_number == nums[index - 1])
+					if (r_cur->reader_info.borrowed_head->id == nums[index - 1])
 					{
-						if (quantity == r_b_cur->borbook_quantity)			//清空该读者借阅图书中的这本图书
+						if (quantity == r_b_cur->quantity)			//清空该读者借阅图书中的这本图书
 						{
 							BorrowedBooks* tmp = r_cur->reader_info.borrowed_head;
 							r_cur->reader_info.borrowed_head = r_cur->reader_info.borrowed_head->next;  // 移动头指针
 							delete tmp;  // 释放内存
 						}
-						else r_cur->reader_info.borrowed_head->borbook_quantity -= quantity;  // 减去归还图书的数量
+						else r_cur->reader_info.borrowed_head->quantity -= quantity;  // 减去归还图书的数量
 					}
 					// 要归还的不是头结点的图书，需要找到前一个结点
 					else
@@ -720,17 +720,17 @@ void Library::BookReturn()
 						r_b_cur = r_cur->reader_info.borrowed_head;  // 修改指针指向借阅的第一本图书
 						while (r_b_cur->next != nullptr)
 						{
-							if (r_b_cur->next->borbook_number == nums[index - 1])
+							if (r_b_cur->next->id == nums[index - 1])
 								break;
 							r_b_cur = r_b_cur->next;
 						}
-						if (quantity == r_b_cur->next->borbook_quantity)  // 清空该读者借阅图书中的这本图书
+						if (quantity == r_b_cur->next->quantity)  // 清空该读者借阅图书中的这本图书
 						{
 							BorrowedBooks* tmp = r_b_cur->next;
 							r_b_cur->next = r_b_cur->next->next;  // 修改指针指向
 							delete tmp;  // 释放内存
 						}
-						else r_b_cur->next->borbook_quantity -= quantity;  // 减去归还图书的数量
+						else r_b_cur->next->quantity -= quantity;  // 减去归还图书的数量
 					}
 
 					// 增加归还的图书数量
@@ -738,14 +738,14 @@ void Library::BookReturn()
 					bool exist = false;
 					while (b_cur != nullptr)
 					{
-						if (b_cur->book_info.book_number == nums[index - 1])
+						if (b_cur->book_info.id == nums[index - 1])
 						{
 							exist = true;
-							b_cur->book_info.book_exist += quantity;
+							b_cur->book_info.exist += quantity;
 							cout << endl << "<!>图书已成功归还！" << endl;
 							break;
 						}
-						b_cur = b_cur->book_next;
+						b_cur = b_cur->next;
 					}
 					if (!exist)
 					{
@@ -754,7 +754,7 @@ void Library::BookReturn()
 				}
 				break;
 			}
-			r_cur = r_cur->reader_next;
+			r_cur = r_cur->next;
 		}
 		if (!isExist) cout << "系统中不存在您的相关信息！" << endl;
 	}
@@ -776,13 +776,13 @@ void Library::SaveData()
 	while (b_cur != nullptr)
 	{
 		outfile1.setf(ios::right | ios::unitbuf);  // 右对齐，每次输出后刷新所有流
-		outfile1 << setw(6) << b_cur->book_info.book_number <<
-			setw(30) << b_cur->book_info.book_name <<
-			setw(16) << b_cur->book_info.book_author <<
-			setw(10) << b_cur->book_info.book_exist <<
-			setw(10) << b_cur->book_info.book_inventory;
-		if (b_cur->book_next != nullptr) outfile1 << endl;
-		b_cur = b_cur->book_next;
+		outfile1 << setw(6) << b_cur->book_info.id <<
+			setw(30) << b_cur->book_info.name <<
+			setw(16) << b_cur->book_info.author <<
+			setw(10) << b_cur->book_info.exist <<
+			setw(10) << b_cur->book_info.inventory;
+		if (b_cur->next != nullptr) outfile1 << endl;
+		b_cur = b_cur->next;
 	}
 	outfile1.close();
 	cout << "<!>图书信息保存成功！" << endl;
@@ -797,12 +797,12 @@ void Library::SaveData()
 	while (r_cur != nullptr)
 	{
 		outfile2.setf(ios::right | ios::unitbuf);  // 右对齐，每次输出后刷新所有流
-		outfile2 << setw(10) << r_cur->reader_info.reader_id << setw(20) << r_cur->reader_info.reader_name;
+		outfile2 << setw(10) << r_cur->reader_info.id << setw(20) << r_cur->reader_info.name;
 		if (r_cur->reader_info.borrowed_head != nullptr)
 		{
 			string r_b_file = "reader books ";
 			string r_b_file_type = ".dat";
-			r_b_file = r_b_file + r_cur->reader_info.reader_id + r_b_file_type;
+			r_b_file = r_b_file + r_cur->reader_info.id + r_b_file_type;
 			
 			ofstream outfile3(r_b_file, ios::out);
 			if (!outfile3)
@@ -814,18 +814,18 @@ void Library::SaveData()
 			while (r_b_cur != nullptr)
 			{
 				outfile3.setf(ios::right | ios::unitbuf);  // 右对齐，每次输出后刷新所有流
-				outfile3 << setw(6) << r_b_cur->borbook_number <<
-					setw(30) << r_b_cur->borbook_name <<
-					setw(10) << r_b_cur->borbook_author <<
-					setw(4) << r_b_cur->borbook_quantity;
+				outfile3 << setw(6) << r_b_cur->id <<
+					setw(30) << r_b_cur->name <<
+					setw(10) << r_b_cur->author <<
+					setw(4) << r_b_cur->quantity;
 				if (r_b_cur->next != nullptr) outfile3 << endl;
 				r_b_cur = r_b_cur->next;
 			}
 			outfile3.close();
-			cout << "<!>读者" << r_cur->reader_info.reader_id << "的借阅信息保存成功！" << endl;
+			cout << "<!>读者" << r_cur->reader_info.id << "的借阅信息保存成功！" << endl;
 		}
-		if (r_cur->reader_next != nullptr) outfile2 << endl;
-		r_cur = r_cur->reader_next;
+		if (r_cur->next != nullptr) outfile2 << endl;
+		r_cur = r_cur->next;
 	}
 	outfile2.close();
 	cout << "<!>读者信息保存成功！" << endl;
@@ -846,7 +846,7 @@ bool Library::BookIsExistInBTree(BTreeNode * loc, BookInfo & book)
 		return false;
 	for (int i = 0; i < loc->num; i++)
 	{
-		if (book.book_number == loc->key[i + 1]->book_number)
+		if (book.id == loc->key[i + 1]->id)
 			return true;
 	}
 	return false;
@@ -861,11 +861,11 @@ BTreeNode * Library::BTreeLocate(BookInfo & book)
 		for (int i = 0; i < btree_cur->num; i++)
 		{
 			//元素已存在
-			if (book.book_number == btree_cur->key[i + 1]->book_number)
+			if (book.id == btree_cur->key[i + 1]->id)
 				return btree_cur;
 			
 			//元素[i+1]的左侧找
-			if (book.book_number < btree_cur->key[i + 1]->book_number)
+			if (book.id < btree_cur->key[i + 1]->id)
 			{
 				//如果btree_cur->ptr[i] == NULL说明234树中不存在该元素（图书）
 				if (btree_cur->ptr[i] == NULL)
@@ -914,19 +914,19 @@ void Library::BTreeEstablish()
 			//该元素（图书）已存在
 			if (BookIsExistInBTree(loc, b_cur->book_info))
 			{
-				cout << "- 书号 " << b_cur->book_info.book_number << " 的图书《" << b_cur->book_info.book_name << "》已存在，无需插入" << endl << endl;
-				b_cur = b_cur->book_next;
+				cout << "- 书号 " << b_cur->book_info.id << " 的图书《" << b_cur->book_info.name << "》已存在，无需插入" << endl << endl;
+				b_cur = b_cur->next;
 				continue;
 			}
 
 			//将当前结点插入到234树中
 			else
 			{
-				cout << "- 书号 " << b_cur->book_info.book_number << " 的图书《" << b_cur->book_info.book_name << "》不在树中，插入该新元素" << endl;
+				cout << "- 书号 " << b_cur->book_info.id << " 的图书《" << b_cur->book_info.name << "》不在树中，插入该新元素" << endl;
 				BTreeInsert(b_cur, loc);
-				cout << "- 书号 " << b_cur->book_info.book_number << " 的图书《" << b_cur->book_info.book_name << "》已成功插入B树" << endl << endl;
+				cout << "- 书号 " << b_cur->book_info.id << " 的图书《" << b_cur->book_info.name << "》已成功插入B树" << endl << endl;
 			}
-			b_cur = b_cur->book_next;
+			b_cur = b_cur->next;
 		}
 	}
 	cout << endl << "<!>B树（234树）构建成功！" << endl << endl;
@@ -1003,9 +1003,9 @@ BTreeNode *Library::InsertEleDirect(BTreeNode * node, BTreeNode * book)
 	int i;
 	for (i = 0; i < node->num; i++)
 	{
-		if (book->key[1]->book_number < node->key[i + 1]->book_number)
+		if (book->key[1]->id < node->key[i + 1]->id)
 			break;
-		else if (book->key[1]->book_number > node->key[i + 1]->book_number)
+		else if (book->key[1]->id > node->key[i + 1]->id)
 		{
 			//直接插入到末尾
 			if (i == node->num - 1)
@@ -1054,7 +1054,7 @@ Label:
 		else
 			loc = newBTreeNode;
 		btree_root = loc;
-		book = book->book_next;
+		book = book->next;
 		return;
 	}
 
@@ -1086,7 +1086,7 @@ Label:
 			newBTreeNode->ptr[1] = loc;
 
 			//为0左子树插入，为1右子树插入
-			int left_right = (loc->key[up]->book_number) > (newbook->key[1]->book_number) ? 0 : 1;
+			int left_right = (loc->key[up]->id) > (newbook->key[1]->id) ? 0 : 1;
 
 			//构造左子树结点
 			newBTreeNode->ptr[0]->num = up - 1;
@@ -1142,9 +1142,9 @@ bool Library::BookIsExistInList(BookInfo * book)
 	shared_ptr<BookList> b_cur = book_head_;
 	while (b_cur != NULL)
 	{
-		if (b_cur->book_info.book_number == book->book_number)
+		if (b_cur->book_info.id == book->id)
 			return true;
-		b_cur = b_cur->book_next;
+		b_cur = b_cur->next;
 	}
 	return false;
 }
@@ -1163,7 +1163,7 @@ void Library::BookBTreeShow(BTreeNode * root, int depth)
 			if (n > 0)
 				for (int i = 0; i <= depth; i++)
 					cout << "      ";
-			cout << "---" << root->key[n]->book_number << endl;
+			cout << "---" << root->key[n]->id << endl;
 		}
 		n--;
 	}

@@ -5,32 +5,32 @@
 struct BookList
 {
 	BookInfo book_info;
-	shared_ptr<BookList> book_next = nullptr;
+	shared_ptr<BookList> next = nullptr;
 
 	BookList() {}
 	BookList(string number, string name, string author, int quantity) 
 	{
-		book_info.book_number = number;
-		book_info.book_name = name;
-		book_info.book_author = author;
-		book_info.book_exist = quantity;
-		book_info.book_inventory = quantity;
+		book_info.id = number;
+		book_info.name = name;
+		book_info.author = author;
+		book_info.exist = quantity;
+		book_info.inventory = quantity;
 	}
 	BookList(string number, string name, string author, int exist, int inventory)
 	{
-		book_info.book_number = number;
-		book_info.book_name = name;
-		book_info.book_author = author;
-		book_info.book_exist = exist;
-		book_info.book_inventory = inventory;
+		book_info.id = number;
+		book_info.name = name;
+		book_info.author = author;
+		book_info.exist = exist;
+		book_info.inventory = inventory;
 	}
 
 	BookList(BookInfo & book)
 	{
-		book_info.book_number = book.book_number;
-		book_info.book_name = book.book_name;
-		book_info.book_author = book.book_author;
-		book_info.book_exist = book.book_exist;
-		book_info.book_inventory = book.book_inventory;
+		book_info.id = book.id;
+		book_info.name = book.name;
+		book_info.author = book.author;
+		book_info.exist = book.exist;
+		book_info.inventory = book.inventory;
 	}
 };
