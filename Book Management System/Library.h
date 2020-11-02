@@ -1,4 +1,5 @@
-#pragma once
+#ifndef LIBRARY_H_
+#define LIBRARY_H_
 
 #include <iostream>
 #include <fstream>
@@ -59,3 +60,5 @@ private:
 	shared_ptr<ReaderList> reader_head_;  // 读者链表头指针
 	BTreeNode *btree_root = nullptr;  // 2-3-4树头指针
 };
+
+#endif // !LIBRARY_H_

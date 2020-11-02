@@ -1,4 +1,5 @@
-#pragma once
+#ifndef READER_INFO_H_
+#define READER_INFO_H_
 
 #include <string>
 #include "Reader_Books.h"
@@ -12,3 +13,4 @@ struct ReaderInfo
 	BorrowedBooks *borrowed_head = nullptr;  // 借阅的图书的头指针
 };
 
+#endif

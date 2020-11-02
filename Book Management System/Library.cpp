@@ -3,7 +3,8 @@
 #include "pch.h"
 #include "Library.h"
 
-using namespace std;
+using std::cin;
+using std::cout;
 
 void Library::ImportBookData()
 {
@@ -113,7 +114,7 @@ void Library::ImportBorrowData(shared_ptr<ReaderList> new_reader, const string& 
 			new_reader->reader_info.borrowed_head = newBorBook;
 			r_b_cur = new_reader->reader_info.borrowed_head;
 		}
-		else
+		else if (r_b_cur)
 		{
 			r_b_cur->next = newBorBook;
 			r_b_cur = r_b_cur->next;
@@ -700,13 +701,13 @@ void Library::BookReturn()
 					cout << "请输入要归还的数量:";
 					while (cin >> quantity)
 					{
-						if (quantity >= 0 && quantity <= r_b_cur->quantity) break;
+						if (r_b_cur && quantity <= r_b_cur->quantity && quantity >= 0) break;
 						cout << "输入有误，请重新输入:";
 					}
 					// 要归还的是头结点的图书
 					if (r_cur->reader_info.borrowed_head->id == nums[index - 1])
 					{
-						if (quantity == r_b_cur->quantity)			//清空该读者借阅图书中的这本图书
+						if (r_b_cur && quantity == r_b_cur->quantity)			//清空该读者借阅图书中的这本图书
 						{
 							BorrowedBooks* tmp = r_cur->reader_info.borrowed_head;
 							r_cur->reader_info.borrowed_head = r_cur->reader_info.borrowed_head->next;  // 移动头指针
@@ -724,13 +725,16 @@ void Library::BookReturn()
 								break;
 							r_b_cur = r_b_cur->next;
 						}
-						if (quantity == r_b_cur->next->quantity)  // 清空该读者借阅图书中的这本图书
+						if (r_b_cur->next)  // 清空该读者借阅图书中的这本图书
 						{
-							BorrowedBooks* tmp = r_b_cur->next;
-							r_b_cur->next = r_b_cur->next->next;  // 修改指针指向
-							delete tmp;  // 释放内存
+							if(r_b_cur->next->quantity == quantity)
+							{
+								BorrowedBooks* tmp = r_b_cur->next;
+								r_b_cur->next = r_b_cur->next->next;  // 修改指针指向
+								delete tmp;  // 释放内存
+							}
+							else r_b_cur->next->quantity -= quantity;  // 减去归还图书的数量
 						}
-						else r_b_cur->next->quantity -= quantity;  // 减去归还图书的数量
 					}
 
 					// 增加归还的图书数量
@@ -1151,14 +1155,14 @@ bool Library::BookIsExistInList(BookInfo * book)
 
 void Library::BookBTreeShow(BTreeNode * root, int depth)
 {
-	if (root == NULL)
+	if (root == nullptr)
 		return;
-	int n = root->num;									//结点元素个数
-	while (n != 0)
+	int n = root->num;  // 结点元素个数
+	while (n > 0 && n <= 3)
 	{
-		if (root->ptr[n] != NULL)						//子树非空，递归打印子树
+		if (root->ptr[n] != nullptr)  // 子树非空，递归打印子树
 			BookBTreeShow(root->ptr[n], depth + 1);
-		if (root->key[n] != NULL)						//打印元素
+		if (root->key[n] != nullptr)  // 打印元素
 		{
 			if (n > 0)
 				for (int i = 0; i <= depth; i++)
@@ -1167,7 +1171,7 @@ void Library::BookBTreeShow(BTreeNode * root, int depth)
 		}
 		n--;
 	}
-	if (root->ptr[0] != NULL)
+	if (root->ptr[0] != nullptr)
 	{
 		BookBTreeShow(root->ptr[0], depth + 1);
 		cout << endl;

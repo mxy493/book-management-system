@@ -5,7 +5,8 @@
 
 #include "Library.h"
 
-using namespace std;
+using std::cin;
+using std::cout;
 
 int main()
 {
@@ -63,6 +64,7 @@ int main()
 			break;
 		}
 	} while (func != 0);
+	return 0;
 }
 
 // 运行程序: Ctrl + F5 或调试 >“开始执行(不调试)”菜单

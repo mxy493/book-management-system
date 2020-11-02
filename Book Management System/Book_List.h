@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BOOK_LIST_H_
+#define BOOK_LIST_H_
 
 #include "Book_Info.h"
 
@@ -34,3 +35,5 @@ struct BookList
 		book_info.inventory = book.inventory;
 	}
 };
+
+#endif // !BOOK_LIST_H_

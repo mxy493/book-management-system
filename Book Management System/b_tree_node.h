@@ -1,4 +1,6 @@
-#pragma once
+#ifndef BTREE_NODE_H_
+#define BTREE_NODE_H_
+
 const int m = 4;
 
 struct BTreeNode
@@ -50,3 +52,5 @@ struct BTreeNode
 		}
 	}
 };
+
+#endif // !BTREE_NODE_H_

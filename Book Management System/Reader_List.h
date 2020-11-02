@@ -1,4 +1,5 @@
-#pragma once
+#ifndef READER_LIST_H_
+#define READER_LIST_H_
 
 #include "Reader_Info.h"
 
@@ -14,3 +15,5 @@ struct ReaderList
 		reader_info.name = name;
 	}
 };
+
+#endif // !READER_LIST_H_

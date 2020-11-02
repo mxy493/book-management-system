@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BOOK_INFO_H_
+#define BOOK_INFO_H_
 
 #include "pch.h"
 
@@ -31,3 +32,4 @@ struct BookInfo
 	}
 };
 
+#endif // !BOOK_INFO_H_
