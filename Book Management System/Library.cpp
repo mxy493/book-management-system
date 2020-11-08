@@ -95,7 +95,7 @@ void Library::ImportBorrowData(shared_ptr<ReaderList> new_reader, const string& 
 	r_b_file = r_b_file + id + r_b_file_type;
 	ifstream infile3(r_b_file, ios::in);
 
-	BorrowedBooks* r_b_cur = nullptr;  // 指向借阅的图书的末尾节点
+	shared_ptr<BorrowedBooks> r_b_cur = nullptr;  // 指向借阅的图书的末尾节点
 	if (!infile3)
 	{
 		cerr << "<!>读者" << r_b_file << "的图书借阅信息导入失败！" << endl;
@@ -108,8 +108,8 @@ void Library::ImportBorrowData(shared_ptr<ReaderList> new_reader, const string& 
 		int r_b_borrow;					//借阅量
 		infile3 >> r_b_number >> r_b_name >> r_b_author >> r_b_borrow;
 
-		BorrowedBooks* newBorBook = new BorrowedBooks(r_b_number, r_b_name, r_b_author, r_b_borrow);
-		if (new_reader->reader_info.borrowed_head == NULL)
+		shared_ptr<BorrowedBooks> newBorBook = make_shared<BorrowedBooks>(r_b_number, r_b_name, r_b_author, r_b_borrow);
+		if (new_reader->reader_info.borrowed_head == nullptr)
 		{
 			new_reader->reader_info.borrowed_head = newBorBook;
 			r_b_cur = new_reader->reader_info.borrowed_head;
@@ -196,7 +196,7 @@ void Library::BookFind()
 	cout << endl << "请输入图书的相关信息(书号、书名、作者):";
 	cin >> info;
 	int seq = 0;  // 序号
-	vector<BookInfo*> books;  // 保存查找结果的指针数组
+	vector<shared_ptr<BookInfo>> books;  // 保存查找结果的指针数组
 	// 链表查找
 	if (sel == 0) {
 		ListFind(books, info);
@@ -234,7 +234,8 @@ void Library::BookFind()
 }
 
 // B树递归查找
-void Library::backtrackFind(BTreeNode* cur, vector<BookInfo*>& books, string info) {
+void Library::backtrackFind(shared_ptr<BTreeNode> cur, vector<shared_ptr<BookInfo>>& books, string info)
+{
 	if (cur == nullptr) return;
 	for (int i = 0; i <= cur->num; i++) {
 		//递归查找
@@ -244,22 +245,26 @@ void Library::backtrackFind(BTreeNode* cur, vector<BookInfo*>& books, string inf
 			cur->key[i]->name.find(info) != -1 ||
 			cur->key[i]->author.find(info) != -1)
 		{
-			books.push_back(cur->key[i]);
+			shared_ptr<BookInfo> tmp = cur->key[i];
+			books.push_back(tmp);
 		}
 	}
 }
 
 // 链表查找
-void Library::ListFind(vector<BookInfo*>& books, string info)
+void Library::ListFind(vector<shared_ptr<BookInfo>>& books, string info)
 {
-	auto cur = book_head_;
-	while (cur != NULL)
+	shared_ptr<BookList> cur = book_head_;
+	while (cur != nullptr)
 	{
 		if (cur->book_info.id.find(info) != -1 || 
 			cur->book_info.name.find(info) != -1 || 
 			cur->book_info.author.find(info) != -1)
 		{
-			books.push_back(&cur->book_info);  // 保存图书在内存中的地址
+			shared_ptr<BookInfo> tmp = make_shared<BookInfo>(
+				cur->book_info.id, cur->book_info.name, cur->book_info.author,
+				cur->book_info.exist, cur->book_info.inventory);
+			books.push_back(tmp); // 保存图书在内存中的地址
 		}
 		cur = cur->next;
 	}
@@ -477,7 +482,7 @@ void Library::ReaderBorrowed()
 					cout << setw(58) << setfill('-') << "-" << setfill(' ') << endl;
 					cout << setw(6) << "序号" << setw(10) << "书号" << setw(20) <<
 						"书名" << setw(16) << "作者" << setw(6) << "数量" << endl << endl;
-					BorrowedBooks *r_b_cur = r_cur->reader_info.borrowed_head;
+					shared_ptr<BorrowedBooks> r_b_cur = r_cur->reader_info.borrowed_head;
 					int i = 1;
 					while (r_b_cur != NULL)
 					{
@@ -582,7 +587,7 @@ void Library::BookBorrow()
 					cin >> name;
 
 					auto newReader = make_shared<ReaderList>(ID, name);
-					BorrowedBooks *newBorBook = new BorrowedBooks(b_cur->book_info.id, b_cur->book_info.name, b_cur->book_info.author, qua);
+					shared_ptr<BorrowedBooks> newBorBook = make_shared<BorrowedBooks>(b_cur->book_info.id, b_cur->book_info.name, b_cur->book_info.author, qua);
 
 					if (reader_head_ == nullptr)  // 读者信息库为空，则直接添加该读者以及借阅的图书
 					{
@@ -604,7 +609,7 @@ void Library::BookBorrow()
 									break;
 								}
 								else {
-									BorrowedBooks *borbook_cur = r_cur->reader_info.borrowed_head;		//指向当前读者的当前图书
+									shared_ptr<BorrowedBooks> borbook_cur = r_cur->reader_info.borrowed_head;		//指向当前读者的当前图书
 									bool borrowed = false;
 									while (borbook_cur != nullptr)
 									{
@@ -676,7 +681,7 @@ void Library::BookReturn()
 					cout << endl << setw(58) << setfill('-') << "-" << setfill(' ') << endl;
 					cout << setw(6) << "序号" << setw(10) << "书号" << setw(20) <<
 						"书名" << setw(16) << "作者" << setw(6) << "数量" << endl << endl;
-					BorrowedBooks *r_b_cur = r_cur->reader_info.borrowed_head;  // 当前的该读者借阅的图书
+					shared_ptr<BorrowedBooks> r_b_cur = r_cur->reader_info.borrowed_head;  // 当前的该读者借阅的图书
 					int n = 1;
 					vector<string> nums;
 					while (r_b_cur != nullptr)
@@ -709,9 +714,8 @@ void Library::BookReturn()
 					{
 						if (r_b_cur && quantity == r_b_cur->quantity)			//清空该读者借阅图书中的这本图书
 						{
-							BorrowedBooks* tmp = r_cur->reader_info.borrowed_head;
+							shared_ptr<BorrowedBooks> tmp = r_cur->reader_info.borrowed_head;
 							r_cur->reader_info.borrowed_head = r_cur->reader_info.borrowed_head->next;  // 移动头指针
-							delete tmp;  // 释放内存
 						}
 						else r_cur->reader_info.borrowed_head->quantity -= quantity;  // 减去归还图书的数量
 					}
@@ -729,9 +733,8 @@ void Library::BookReturn()
 						{
 							if(r_b_cur->next->quantity == quantity)
 							{
-								BorrowedBooks* tmp = r_b_cur->next;
+								shared_ptr<BorrowedBooks> tmp = r_b_cur->next;
 								r_b_cur->next = r_b_cur->next->next;  // 修改指针指向
-								delete tmp;  // 释放内存
 							}
 							else r_b_cur->next->quantity -= quantity;  // 减去归还图书的数量
 						}
@@ -814,7 +817,7 @@ void Library::SaveData()
 				cerr << "<!>读者借阅信息保存失败！" << endl;
 				exit(1);
 			}
-			BorrowedBooks *r_b_cur = r_cur->reader_info.borrowed_head;
+			shared_ptr<BorrowedBooks> r_b_cur = r_cur->reader_info.borrowed_head;
 			while (r_b_cur != nullptr)
 			{
 				outfile3.setf(ios::right | ios::unitbuf);  // 右对齐，每次输出后刷新所有流
@@ -838,13 +841,10 @@ void Library::SaveData()
 
 void Library::BTreeEmpty()
 {
-	// 应该遍历2-3-4树释放内存
-	BTreeNode* tmp = btree_root;
-	btree_root = NULL;
-	delete tmp;
+	btree_root = nullptr; // 不确定会不会释放整个B树的内存，但应该会释放btree_root所指向的内存
 }
 
-bool Library::BookIsExistInBTree(BTreeNode * loc, BookInfo & book)
+bool Library::BookIsExistInBTree(shared_ptr<BTreeNode> loc, BookInfo & book)
 {
 	if (loc == NULL)
 		return false;
@@ -857,10 +857,10 @@ bool Library::BookIsExistInBTree(BTreeNode * loc, BookInfo & book)
 }
 
 //定位元素，如果B树为空则返回nullptr，否则返回最后的结点位置
-BTreeNode * Library::BTreeLocate(BookInfo & book)
+shared_ptr<BTreeNode> Library::BTreeLocate(BookInfo & book)
 {
-	BTreeNode *btree_cur = btree_root;
-	while (btree_cur != NULL)
+	shared_ptr<BTreeNode> btree_cur = btree_root;
+	while (btree_cur != nullptr)
 	{
 		for (int i = 0; i < btree_cur->num; i++)
 		{
@@ -913,7 +913,7 @@ void Library::BTreeEstablish()
 	{
 		while (b_cur != NULL)
 		{
-			BTreeNode * loc = BTreeLocate(b_cur->book_info);		//指向当前结点
+			shared_ptr<BTreeNode> loc = BTreeLocate(b_cur->book_info); // 指向当前结点
 
 			//该元素（图书）已存在
 			if (BookIsExistInBTree(loc, b_cur->book_info))
@@ -1001,7 +1001,7 @@ void Library::BookAdd()
 
 //前提是已知node结点元素未满能直接插入
 //不用分裂节点的情况下直接插入元素
-BTreeNode *Library::InsertEleDirect(BTreeNode * node, BTreeNode * book)
+shared_ptr<BTreeNode> Library::InsertEleDirect(shared_ptr<BTreeNode> node, shared_ptr<BTreeNode> book)
 {
 	//定位，插入到key[i]
 	int i;
@@ -1015,7 +1015,7 @@ BTreeNode *Library::InsertEleDirect(BTreeNode * node, BTreeNode * book)
 			if (i == node->num - 1)
 			{
 				i = i + 2;
-				node->key[i] = new BookInfo(book->key[1]);
+				node->key[i] = make_shared<BookInfo>(book->key[1]);
 				node->ptr[i - 1] = book->ptr[0];
 				node->ptr[i] = book->ptr[1];
 				node->num++;
@@ -1041,24 +1041,17 @@ BTreeNode *Library::InsertEleDirect(BTreeNode * node, BTreeNode * book)
 }
 
 //在loc所指结点插入新图书book
-void Library::BTreeInsert(shared_ptr<BookList> book, BTreeNode * loc)
+void Library::BTreeInsert(shared_ptr<BookList> book, shared_ptr<BTreeNode> loc)
 {
-	BTreeNode * loc_parent;					//指向当前结点的父结点
-	BTreeNode * newbook;					//新元素结点
-	BTreeNode * newBTreeNode = NULL;		//上提元素结点
-
-	newbook = new BTreeNode(&book->book_info);		//传值初始化
+	shared_ptr<BTreeNode> loc_parent; // 指向当前结点的父结点
+	shared_ptr<BTreeNode> new_book_node = make_shared<BTreeNode>(book->book_info); // 新元素结点
+	shared_ptr<BTreeNode> new_btree_node = nullptr; // 上提元素结点
 
 Label:
 	//如果loc为空，即234树根指针为空，B树为空，则将根指针指向新节点
-	if (loc == NULL)
+	if (loc == nullptr)
 	{
-		if (newBTreeNode == NULL)
-			loc = newbook;
-		else
-			loc = newBTreeNode;
-		btree_root = loc;
-		book = book->next;
+		btree_root = new_book_node;
 		return;
 	}
 
@@ -1068,14 +1061,14 @@ Label:
 		//如果当前结点未满3个元素，则将该元素插入到key[j]之前
 		if (loc->num < m - 1)
 		{
-			loc = InsertEleDirect(loc, newbook);
+			loc = InsertEleDirect(loc, new_book_node);
 			for (int i = 0; i <= loc->num; i++)
 			{
-				if (loc->ptr[i] == NULL)
+				if (loc->ptr[i] == nullptr)
 					continue;
 				loc->ptr[i]->parent = loc;
 			}
-			return;			//已插入成功，结束函数
+			return; //已插入成功，结束函数
 		}
 
 		//当前结点已满3个元素，需要分裂结点
@@ -1084,32 +1077,32 @@ Label:
 			//int up = ceil((i + 1) / 2.0);				//取(i+1)/2的上整，对应的元素即loc->key[up]上提
 			int up = 2;									//默认将中间的元素即loc->key[2]上提
 			//新建一个BTreeNode *指针指向要上提的元素
-			newBTreeNode = new BTreeNode(loc->key[up]);
+			new_btree_node = make_shared<BTreeNode>(loc->key[up]);
 
-			newBTreeNode->ptr[0] = new BTreeNode();
-			newBTreeNode->ptr[1] = loc;
+			new_btree_node->ptr[0] = make_shared<BTreeNode>();
+			new_btree_node->ptr[1] = loc;
 
 			//为0左子树插入，为1右子树插入
-			int left_right = (loc->key[up]->id) > (newbook->key[1]->id) ? 0 : 1;
+			int left_right = (loc->key[up]->id) > (new_book_node->key[1]->id) ? 0 : 1;
 
 			//构造左子树结点
-			newBTreeNode->ptr[0]->num = up - 1;
-			newBTreeNode->ptr[0]->parent = newBTreeNode;
+			new_btree_node->ptr[0]->num = up - 1;
+			new_btree_node->ptr[0]->parent = new_btree_node;
 			for (int k = 0; k < up; k++)
 			{
-				newBTreeNode->ptr[0]->ptr[k] = loc->ptr[k];
+				new_btree_node->ptr[0]->ptr[k] = loc->ptr[k];
 				if (k == 0)
 					continue;
-				newBTreeNode->ptr[0]->key[k] = new BookInfo(loc->key[k]);
+				new_btree_node->ptr[0]->key[k] = make_shared<BookInfo>(loc->key[k]);
 			}
 
 			//插入到左子节点中
 			if (left_right == 0)
-				newBTreeNode->ptr[0] = InsertEleDirect(newBTreeNode->ptr[0], newbook);
+				new_btree_node->ptr[0] = InsertEleDirect(new_btree_node->ptr[0], new_book_node);
 
 			//构造右子树结点
 			loc_parent = loc->parent;
-			newBTreeNode->ptr[1]->parent = newBTreeNode;
+			new_btree_node->ptr[1]->parent = new_btree_node;
 			for (int k = 0; k <= loc->num; k++)
 			{
 				if (k < up)
@@ -1119,7 +1112,7 @@ Label:
 				}
 				else
 				{
-					loc->key[k - up] = new BookInfo(loc->key[k]);
+					loc->key[k - up] = make_shared<BookInfo>(loc->key[k]);
 					loc->ptr[k - up] = loc->ptr[k];
 					loc->key[k] = NULL;
 					loc->ptr[k] = NULL;
@@ -1130,10 +1123,10 @@ Label:
 
 			//插入到右子节点中
 			if (left_right == 1)
-				newBTreeNode->ptr[1] = InsertEleDirect(newBTreeNode->ptr[1], newbook);
+				new_btree_node->ptr[1] = InsertEleDirect(new_btree_node->ptr[1], new_book_node);
 
 			//newBTreeNode作为新元素在上一层插入
-			newbook = newBTreeNode;
+			new_book_node = new_btree_node;
 			loc = loc_parent;
 			goto Label;
 		}
@@ -1153,7 +1146,7 @@ bool Library::BookIsExistInList(BookInfo * book)
 	return false;
 }
 
-void Library::BookBTreeShow(BTreeNode * root, int depth)
+void Library::BookBTreeShow(shared_ptr<BTreeNode> root, int depth)
 {
 	if (root == nullptr)
 		return;

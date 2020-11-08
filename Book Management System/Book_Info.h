@@ -22,7 +22,34 @@ struct BookInfo
 		inventory = -1;
 	}
 
-	BookInfo(BookInfo * book)
+	BookInfo(const string& id, const string& name, const string& author, const int exist, const int inventory)
+	{
+		this->id = id;
+		this->name = name;
+		this->author = author;
+		this->exist = exist;
+		this->inventory = inventory;
+	}
+
+	BookInfo(const BookInfo* book)
+	{
+		id = book->id;
+		name = book->name;
+		author = book->author;
+		exist = book->exist;
+		inventory = book->inventory;
+	}
+
+	BookInfo(const BookInfo& book)
+	{
+		id = book.id;
+		name = book.name;
+		author = book.author;
+		exist = book.exist;
+		inventory = book.inventory;
+	}
+
+	BookInfo(const shared_ptr<BookInfo> book)
 	{
 		id = book->id;
 		name = book->name;

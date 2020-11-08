@@ -11,7 +11,7 @@ struct BorrowedBooks
 	string author;	//作者
 	int quantity{0};	//借阅量
 
-	BorrowedBooks *next = nullptr;	//next指针
+	shared_ptr<BorrowedBooks> next = nullptr;	//next指针
 
 	BorrowedBooks(string id, string name, string author, int quantity)
 	{

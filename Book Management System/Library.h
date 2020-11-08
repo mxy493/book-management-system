@@ -24,15 +24,15 @@ public:
 
 	void BookAdd();													// 2 采编入库
 	void BookListAdd(shared_ptr<BookList> newBook);					// 2.1 添加到图书链表
-	void BTreeInsert(shared_ptr<BookList> book, BTreeNode * loc);	// 2.2 插入图书到B树中
+	void BTreeInsert(shared_ptr<BookList> book, shared_ptr<BTreeNode> loc);	// 2.2 插入图书到B树中
 
 	void BookShow();												// 3 所有图书
 	void BookListShow();											// 3.1 链表显示
-	void BookBTreeShow(BTreeNode * root, int depth);				// 3.2 B树显示
+	void BookBTreeShow(shared_ptr<BTreeNode> root, int depth);		// 3.2 B树显示
 
 	void BookFind();												// 4 查找图书
-	void ListFind(vector<BookInfo*>& books, string info);
-	void backtrackFind(BTreeNode* cur, vector<BookInfo*>& books, string info);
+	void ListFind(vector<shared_ptr<BookInfo>>& books, string info);
+	void backtrackFind(shared_ptr<BTreeNode> cur, vector<shared_ptr<BookInfo>>& books, string info);
 
 
 	void FuncEmpty();												// 5. 清除库存
@@ -50,15 +50,15 @@ public:
 	void SaveData();												// 9 存储数据
 
 	//辅助功能相关函数
-	BTreeNode * BTreeLocate(BookInfo & book);						// 定位插入位置（B树为空则返回nullptr）
+	shared_ptr<BTreeNode> BTreeLocate(BookInfo & book);				// 定位插入位置（B树为空则返回nullptr）
 	bool BookIsExistInList(BookInfo * book);						// 图书是否已存在于链表中
-	bool BookIsExistInBTree(BTreeNode *loc, BookInfo & book);		// 图书是否已存在于B树中
+	bool BookIsExistInBTree(shared_ptr<BTreeNode> loc, BookInfo & book); // 图书是否已存在于B树中
 	void BTreeEstablish();											// 根据链表图书信息构建B树
-	BTreeNode * InsertEleDirect(BTreeNode * node, BTreeNode * book);// 直接在给定结点中插入元素（不分裂）
+	shared_ptr<BTreeNode> InsertEleDirect(shared_ptr<BTreeNode> node, shared_ptr<BTreeNode> book);// 直接在给定结点中插入元素（不分裂）
 private:
 	shared_ptr<BookList> book_head_;  // 图书链表头指针
 	shared_ptr<ReaderList> reader_head_;  // 读者链表头指针
-	BTreeNode *btree_root = nullptr;  // 2-3-4树头指针
+	shared_ptr<BTreeNode> btree_root = nullptr;  // 2-3-4树头指针
 };
 
 #endif // !LIBRARY_H_

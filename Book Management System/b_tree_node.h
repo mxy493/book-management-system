@@ -6,9 +6,9 @@ const int m = 4;
 struct BTreeNode
 {
 	int num;						//关键字个数
-	BTreeNode *parent;				//父结点
-	BookInfo *key[m];				//关键字：最多保存三个关键码（图书），key[0]不使用
-	BTreeNode *ptr[m];				//子结点：最多保存四个指向子树节点的指针
+	shared_ptr<BTreeNode> parent;	//父结点
+	shared_ptr<BookInfo> key[m];	//关键字：最多保存三个关键码（图书），key[0]不使用
+	shared_ptr<BTreeNode> ptr[m];	//子结点：最多保存四个指向子树节点的指针
 
 	BTreeNode()
 	{
@@ -22,7 +22,7 @@ struct BTreeNode
 	}
 
 	//用于初始化要插入的结点（或者是往上提的结点）
-	BTreeNode(BookInfo * book)
+	BTreeNode(const BookInfo& book)
 	{
 		num = 1;
 		parent = nullptr;
@@ -30,25 +30,33 @@ struct BTreeNode
 		{
 			key[i] = nullptr;
 			ptr[i] = nullptr;
-			if (i == 1)
-				key[i] = new BookInfo(book);
 		}
+		key[1] = make_shared<BookInfo>(book); // 构造一个新的BookInfo对象 
 	}
 
-	BTreeNode(BTreeNode * node)
+	BTreeNode(const shared_ptr<BookInfo> book)
+	{
+		num = 1;
+		parent = nullptr;
+		for (int i = 0; i < m; i++)
+		{
+			key[i] = nullptr;
+			ptr[i] = nullptr;
+		}
+		key[1] = make_shared<BookInfo>(book); // 构造一个新的BookInfo对象 
+	}
+
+	BTreeNode(const shared_ptr<BTreeNode> node)
 	{
 		num = node->num;
-		parent = node->parent;
+		parent = nullptr; // 构造的新节点没有父节点，需要在使用的时候手动修改指向
 		for (int i = 0; i < m; i++)
 		{
 			if (node->key[i] != nullptr)
-				key[i] = new BookInfo(node->key[i]);
+				key[i] = make_shared<BookInfo>(node->key[i]);
 			else
 				key[i] = nullptr;
-			if (node->ptr[i] != nullptr)
-				ptr[i] = node->ptr[i];
-			else
-				ptr[i] = nullptr;
+			ptr[i] = nullptr; // 所有指向孩子节点的指针置为空
 		}
 	}
 };
